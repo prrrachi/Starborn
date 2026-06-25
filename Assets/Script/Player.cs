@@ -1,7 +1,8 @@
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-public class NewMonoBehaviourScript : MonoBehaviour
+public class Player : MonoBehaviour
 {
     [Header("Components")]
     public Rigidbody2D rb;
@@ -19,14 +20,20 @@ public class NewMonoBehaviourScript : MonoBehaviour
     public float fallGravity;
     public float jumpGravity;
 
-
-
-
+    
     public int facingDirection = 1;
     // inputs
     private Vector2 moveInput;
     private bool jumpPressed;
     private bool jumpReleased;
+
+
+    [Header("Dash Settings")]
+    public float dashSpeed;
+    public float dashTime;
+    public float dashCooldown;
+    private bool canDash = true;
+    private bool isDashing;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -47,10 +54,12 @@ public class NewMonoBehaviourScript : MonoBehaviour
     void Update()
     {
        
+    
         Flip();
         HandleAnimations();
     
     }
+    
 
     void FixedUpdate()
     { 
@@ -62,12 +71,14 @@ public class NewMonoBehaviourScript : MonoBehaviour
 
     private void HandleMovement()
     {
+        if (isDashing) return;
         float targetSpeed = moveInput.x * speed;
         rb.linearVelocity = new Vector2(targetSpeed,rb.linearVelocity.y);
     }
 
     private void HandleJump()
     {
+        if (isDashing) return;
         if(jumpPressed && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
@@ -107,7 +118,11 @@ public class NewMonoBehaviourScript : MonoBehaviour
     }
 
     void HandleAnimations()
-    {
+    {   
+         if (isDashing) return;
+         
+         
+         
          
          anim.SetBool("isJumping", rb.linearVelocity.y >.1f);
          anim.SetBool("isGrounded", isGrounded);
@@ -140,12 +155,6 @@ else
 }
 
 
-
-   
-
-
-
-
     public void OnMove (InputValue value)
     {
         moveInput = value.Get<Vector2>();
@@ -164,6 +173,43 @@ else
             
         }
     }
+
+   public void OnDash(InputValue value)
+   {
+     if(value.isPressed && canDash && !isDashing)
+     {
+        StartCoroutine(Dash());
+     }
+   }
+
+
+    private IEnumerator Dash()
+   {
+     canDash = false;
+     isDashing = true;
+
+
+     float originalGravity = rb.gravityScale;
+     rb.gravityScale = 0;
+
+     rb.linearVelocity = new Vector2(facingDirection * dashSpeed, 0);
+
+     yield return new WaitForSeconds(dashTime);
+
+     rb.gravityScale = originalGravity;
+     anim.Play("Idle");
+     isDashing = false;
+
+     
+       
+
+     yield return new WaitForSeconds(dashCooldown);
+
+     canDash = true;
+    }
+
+   
+
    
 
     private void OnDrawGizmosSelected()
