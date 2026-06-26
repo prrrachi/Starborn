@@ -44,6 +44,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+        anim = GetComponentInChildren<Animator>();
         rb.gravityScale = normalGravity;
        
         originalSpritePosition = spriteTransform.localPosition;
@@ -185,26 +186,23 @@ else
 
     private IEnumerator Dash()
    {
+
+
      canDash = false;
      isDashing = true;
-
-
      float originalGravity = rb.gravityScale;
-     rb.gravityScale = 0;
+     rb.gravityScale = 0;rb.linearVelocity = new Vector2(facingDirection * dashSpeed, 0);
 
-     rb.linearVelocity = new Vector2(facingDirection * dashSpeed, 0);
+     anim.SetTrigger("Dash");
+     anim.SetBool("isDashing", true);
 
      yield return new WaitForSeconds(dashTime);
 
      rb.gravityScale = originalGravity;
-     anim.Play("Idle");
+     anim.SetBool("isDashing", false);
      isDashing = false;
 
-     
-       
-
      yield return new WaitForSeconds(dashCooldown);
-
      canDash = true;
     }
 
